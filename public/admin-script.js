@@ -1,19 +1,23 @@
 // Admin application script
 document.addEventListener('DOMContentLoaded', () => {
+    const loginSection = document.getElementById('loginSection');
+    const adminDashboard = document.getElementById('adminDashboard');
+    const loginForm = document.getElementById('loginForm');
     const authCheckUrl = '/api/admin-auth?action=check';
     const loginUrl = '/api/admin-auth?action=login';
     const logoutUrl = '/api/admin-auth?action=logout';
 
     // Check authentication on page load
     checkAuth().then(authenticated => {
-        if (!authenticated) {
-            window.location.href = '/admin.html';
+        if (authenticated) {
+            showDashboard();
         } else {
-            initAdminApp();
+            showLogin();
         }
     }).catch(error => {
         console.error('Auth check failed:', error);
-        // No redirigir automáticamente, dejar que el usuario intente entrar
+        // Si falla, mostrar login
+        showLogin();
     });
 
     async function checkAuth() {
@@ -25,6 +29,25 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Error checking auth:', error);
             return false;
         }
+    }
+
+    function showLogin() {
+        if (loginSection) {
+            loginSection.style.display = 'flex';
+        }
+        if (adminDashboard) {
+            adminDashboard.style.display = 'none';
+        }
+    }
+
+    function showDashboard() {
+        if (loginSection) {
+            loginSection.style.display = 'none';
+        }
+        if (adminDashboard) {
+            adminDashboard.style.display = 'block';
+        }
+        initAdminApp();
     }
 
     async function initAdminApp() {
@@ -169,6 +192,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Setup event listeners
     function setupEventListeners() {
+        // Login form
+        const loginForm = document.getElementById('loginForm');
+        if (loginForm) {
+            loginForm.addEventListener('submit', handleLogin);
+        }
+
         // Category form
         document.getElementById('categoryForm')?.addEventListener('submit', handleCategorySubmit);
 
@@ -181,6 +210,83 @@ document.addEventListener('DOMContentLoaded', () => {
         // Logout
         document.getElementById('logoutBtn')?.addEventListener('click', handleLogout);
     }
+
+    // Handle login
+    async function handleLogin(e) {
+        e.preventDefault();
+
+        const form = e.target;
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+
+        try {
+            const response = await fetch(loginUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showNotification(result.message, 'success');
+                setTimeout(() => {
+                    showDashboard();
+                }, 1000);
+            } else {
+                showNotification(result.message, 'error');
+            }
+        } catch (error) {
+            console.error('Login error:', error);
+            showNotification('Error al iniciar sesión', 'error');
+        }
+    }
+
+    // Show product form
+    window.showProductForm = function() {
+        const form = document.getElementById('productForm');
+        if (form) {
+            form.reset();
+            form.querySelector('[name="id"]').value = '';
+            document.getElementById('products-section').scrollIntoView({ behavior: 'smooth' });
+        }
+    };
+
+    // Show category form
+    window.showCategoryForm = function() {
+        const form = document.getElementById('categoryForm');
+        if (form) {
+            form.reset();
+            form.querySelector('[name="id"]').value = '';
+            document.getElementById('categories-section').scrollIntoView({ behavior: 'smooth' });
+        }
+    };
+
+    // Hide category form
+    window.hideCategoryForm = function() {
+        const formContainer = document.getElementById('categoryFormContainer');
+        if (formContainer) {
+            formContainer.style.display = 'none';
+        }
+    };
+
+    // Show promotion form
+    window.showPromotionForm = function() {
+        const form = document.getElementById('promotionForm');
+        if (form) {
+            form.reset();
+            form.querySelector('[name="id"]').value = '';
+            document.getElementById('promotions-section').scrollIntoView({ behavior: 'smooth' });
+        }
+    };
+
+    // Hide promotion form
+    window.hidePromotionForm = function() {
+        const formContainer = document.getElementById('promotionFormContainer');
+        if (formContainer) {
+            formContainer.style.display = 'none';
+        }
+    };
 
     // Handle category form submit
     async function handleCategorySubmit(e) {
@@ -290,6 +396,24 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Error logging out:', error);
         }
     }
+
+    // Show product form
+    window.showProductForm = function() {
+        const form = document.getElementById('productForm');
+        if (form) {
+            form.reset();
+            form.querySelector('[name="id"]').value = '';
+            document.getElementById('products-section').scrollIntoView({ behavior: 'smooth' });
+        }
+    };
+
+    // Hide product form
+    window.hideProductForm = function() {
+        const formContainer = document.getElementById('productFormContainer');
+        if (formContainer) {
+            formContainer.style.display = 'none';
+        }
+    };
 
     // Show notification
     function showNotification(message, type = 'info') {

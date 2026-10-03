@@ -1,39 +1,26 @@
-// Test connection to Neon PostgreSQL
+// Prueba de conexión a Neon. Solo para administradores con sesión iniciada.
+import { getDb } from './_db.js';
+import { requireAdmin } from './_auth.js';
+import { handleError, methodNotAllowed, sendJson } from './_utils.js';
+
 export default async function handler(req, res) {
     if (req.method !== 'GET') {
-        return res.status(405).json({ success: false, message: 'Método no permitido' });
+        return methodNotAllowed(res, ['GET']);
     }
 
     try {
-        const { neon } = require('@neondatabase/serverless');
-        const databaseUrl = process.env.DATABASE_URL;
+        const admin = await requireAdmin(req, res);
+        if (!admin) return;
 
-        if (!databaseUrl) {
-            return res.status(500).json({
-                success: false,
-                message: 'DATABASE_URL no está configurada'
-            });
-        }
+        const sql = await getDb();
+        const rows = await sql`SELECT NOW() AS server_time`;
 
-        const sql = neon(databaseUrl);
-        const result = await sql`
-            SELECT
-                version() AS database_version,
-                NOW() AS server_time
-        `;
-
-        return res.status(200).json({
+        return sendJson(res, 200, {
             success: true,
             message: 'Conexión correcta con PostgreSQL',
-            database_version: result[0].database_version,
-            server_time: result[0].server_time
+            server_time: rows[0].server_time
         });
-
     } catch (error) {
-        return res.status(500).json({
-            success: false,
-            message: 'Error al conectar con PostgreSQL',
-            error: error.message
-        });
+        return handleError(res, error, 'test-db');
     }
 }

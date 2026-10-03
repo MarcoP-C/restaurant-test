@@ -203,16 +203,29 @@ async function initApp() {
 
     // Get discount text based on discount type
     function getDiscountText(promo) {
+        const value = parseFloat(promo.discount_value);
+
         if (promo.discount_type === 'percentage') {
-            return `-${promo.discount_value}%`;
+            return `-${value.toFixed(2)}%`;
         } else if (promo.discount_type === 'fixed') {
-            return `$${promo.discount_value.toFixed(2)}`;
+            return `$${value.toFixed(2)}`;
         } else if (promo.discount_type === 'buy_x_get_y') {
-            return `Compra ${promo.buy_x_get_y} paga ${promo.buy_x_get_y + promo.buy_x_get_y}`;
+            // Compra X paga Y: el usuario paga X y obtiene Y productos adicionales
+            // Ejemplo: Compra 2 paga 1 → Compras 2, obtienes 1 gratis
+            return `Compra ${promo.buy_x_get_y} obtienes ${promo.buy_x_get_y} gratis`;
         } else if (promo.discount_type === 'minimum') {
-            return `Min. $${promo.min_purchase.toFixed(2)}`;
+            const min = parseFloat(promo.min_purchase);
+            return `Min. $${min.toFixed(2)}`;
         }
-        return `${promo.discount_value}`;
+        return `$${promo.discount_value}`;
+    }
+
+    // Convert string to number
+    function parseDecimal(value) {
+        if (typeof value === 'string') {
+            return parseFloat(value);
+        }
+        return parseFloat(value) || 0;
     }
 
     // Show product modal
