@@ -14,7 +14,7 @@
                 <h1>🛠️ Panel Admin</h1>
                 <p>Ingresa tus credenciales para continuar</p>
             </div>
-            <form id="loginForm" method="post">
+            <form id="loginForm" onsubmit="event.preventDefault(); document.getElementById('loginForm').dispatchEvent(new Event('submit', { bubbles: true })); return false;">
                 <div class="form-group">
                     <label for="username">Usuario</label>
                     <input type="text" id="username" name="username" required autocomplete="username">
@@ -24,7 +24,7 @@
                     <input type="password" id="password" name="password" required autocomplete="current-password">
                 </div>
                 <div class="form-actions">
-                    <button type="submit" class="btn btn-primary btn-block">Iniciar Sesión</button>
+                    <button type="button" class="btn btn-primary btn-block" onclick="document.getElementById('loginForm').dispatchEvent(new Event('submit', { bubbles: true }));">Iniciar Sesión</button>
                 </div>
             </form>
             <p class="login-note">Usuario: admin | Contraseña: changeme123</p>
