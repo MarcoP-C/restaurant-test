@@ -1,5 +1,5 @@
 {
-  "name": "restaurant-test",
+  "name": "restaurant-test", 
   "version": "1.0.0",
   "description": "Sistema de menú de restaurante con Vercel Functions + Neon PostgreSQL",
   "type": "module",
