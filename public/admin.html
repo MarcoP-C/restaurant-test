@@ -14,7 +14,7 @@
                 <h1>🛠️ Panel Admin</h1>
                 <p>Ingresa tus credenciales para continuar</p>
             </div>
-            <form id="loginForm">
+            <form id="loginForm" method="post">
                 <div class="form-group">
                     <label for="username">Usuario</label>
                     <input type="text" id="username" name="username" required autocomplete="username">
@@ -122,7 +122,7 @@
             </div>
 
             <div class="form-container" id="productFormContainer" style="display: none;">
-                <form id="productForm">
+                <form id="productForm" method="post">
                     <input type="hidden" name="id">
                     <div class="form-group">
                         <label>Nombre</label>
@@ -182,7 +182,7 @@
             </div>
 
             <div class="form-container" id="categoryFormContainer" style="display: none;">
-                <form id="categoryForm">
+                <form id="categoryForm" method="post">
                     <input type="hidden" name="id">
                     <div class="form-group">
                         <label>Nombre</label>
@@ -229,7 +229,7 @@
             </div>
 
             <div class="form-container" id="promotionFormContainer" style="display: none;">
-                <form id="promotionForm">
+                <form id="promotionForm" method="post">
                     <input type="hidden" name="id">
                     <div class="form-group">
                         <label>Nombre</label>
