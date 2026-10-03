@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Administrativo - Restaurante</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2>🛠️ Panel Admin</h2>
+        </div>
+        <nav class="sidebar-nav">
+            <ul>
+                <li>
+                    <a href="#products-section" class="sidebar-link active">
+                        <span>📦 Productos</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#categories-section" class="sidebar-link">
+                        <span>📂 Categorías</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#promotions-section" class="sidebar-link">
+                        <span>🎉 Promociones</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#users-section" class="sidebar-link">
+                        <span>👤 Usuarios</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#settings-section" class="sidebar-link">
+                        <span>⚙️ Configuración</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        <div class="sidebar-footer">
+            <button id="logoutBtn" class="btn btn-danger">
+                🚪 Cerrar Sesión
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Overlay -->
+        <div class="overlay" id="overlay"></div>
+
+        <!-- Header -->
+        <header>
+            <div class="header-content">
+                <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
+                    <span class="hamburger">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </span>
+                </button>
+                <h1 class="logo">🍔 RESTAURANTE ADMIN</h1>
+            </div>
+        </header>
+
+        <!-- Products Section -->
+        <section id="products-section">
+            <div class="section-header">
+                <h2>📦 Productos</h2>
+                <button class="btn btn-primary" onclick="showProductForm()">
+                    ➕ Agregar Producto
+                </button>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Categoría</th>
+                            <th>Precio</th>
+                            <th>Disponible</th>
+                            <th>Promoción</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productsTableBody">
+                        <tr>
+                            <td colspan="7" class="loading">Cargando productos...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Categories Section -->
+        <section id="categories-section">
+            <div class="section-header">
+                <h2>📂 Categorías</h2>
+                <button class="btn btn-primary" onclick="showCategoryForm()">
+                    ➕ Agregar Categoría
+                </button>
+            </div>
+
+            <div class="form-container" id="categoryFormContainer" style="display: none;">
+                <form id="categoryForm">
+                    <input type="hidden" name="id">
+                    <div class="form-group">
+                        <label>Nombre</label>
+                        <input type="text" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Descripción</label>
+                        <textarea name="description" rows="3"></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                        <button type="button" class="btn btn-secondary" onclick="hideCategoryForm()">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Descripción</th>
+                            <th>Activo</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="categoriesTableBody">
+                        <tr>
+                            <td colspan="5" class="loading">Cargando categorías...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Promotions Section -->
+        <section id="promotions-section">
+            <div class="section-header">
+                <h2>🎉 Promociones</h2>
+                <button class="btn btn-primary" onclick="showPromotionForm()">
+                    ➕ Agregar Promoción
+                </button>
+            </div>
+
+            <div class="form-container" id="promotionFormContainer" style="display: none;">
+                <form id="promotionForm">
+                    <input type="hidden" name="id">
+                    <div class="form-group">
+                        <label>Nombre</label>
+                        <input type="text" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Descripción</label>
+                        <textarea name="description" rows="3"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Tipo de descuento</label>
+                            <select name="discount_type" required>
+                                <option value="percentage">Porcentaje (%)</option>
+                                <option value="fixed">Fijo ($)</option>
+                                <option value="buy_x_get_y">Compra X paga Y</option>
+                                <option value="minimum">Mínimo de compra</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Valor del descuento</label>
+                            <input type="number" name="discount_value" step="0.01" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Mínimo de compra</label>
+                            <input type="number" name="min_purchase" step="0.01" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label>Compra X paga Y</label>
+                            <input type="number" name="buy_x_get_y" value="0">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Fecha inicio</label>
+                            <input type="date" name="start_date">
+                        </div>
+                        <div class="form-group">
+                            <label>Fecha fin</label>
+                            <input type="date" name="end_date" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Activo</label>
+                        <select name="is_active">
+                            <option value="true">Sí</option>
+                            <option value="false">No</option>
+                        </select>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                        <button type="button" class="btn btn-secondary" onclick="hidePromotionForm()">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Tipo</th>
+                            <th>Valor</th>
+                            <th>Descuento</th>
+                            <th>Activo</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="promotionsTableBody">
+                        <tr>
+                            <td colspan="7" class="loading">Cargando promociones...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Users Section -->
+        <section id="users-section">
+            <div class="section-header">
+                <h2>👤 Usuarios</h2>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Usuario</th>
+                            <th>Fecha de creación</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="3" class="loading">Cargando usuarios...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Settings Section -->
+        <section id="settings-section">
+            <div class="section-header">
+                <h2>⚙️ Configuración</h2>
+            </div>
+            <div class="card">
+                <h3>Información del admin</h3>
+                <p><strong>Usuario:</strong> admin</p>
+                <p><strong>Contraseña:</strong> ${process.env.ADMIN_PASSWORD || 'changeme123'}</p>
+                <p style="color: var(--accent-color); margin-top: 1rem;">
+                    ⚠️ <strong>IMPORTANTE:</strong> Cambia esta contraseña en producción
+                </p>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer>
+            <p>© 2026 Restaurante Admin. Todos los derechos reservados.</p>
+        </footer>
+    </div>
+
+    <script src="admin-script.js"></script>
+</body>
+</html>
