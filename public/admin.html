@@ -88,6 +88,9 @@
                     </span>
                 </button>
                 <h1 class="logo">🍔 RESTAURANTE ADMIN</h1>
+                <button class="theme-toggle" id="themeToggle" aria-label="Cambiar tema">
+                    <span class="theme-icon" id="themeIcon">🌙</span>
+                </button>
             </div>
         </header>
 
@@ -139,7 +142,7 @@
                         </div>
                         <div class="form-group">
                             <label>Categoría</label>
-                            <select name="category_id" required>
+                            <select name="category_id" data-category-select required>
                                 <option value="">Seleccionar categoría</option>
                             </select>
                         </div>
@@ -191,6 +194,13 @@
                     <div class="form-group">
                         <label>Descripción</label>
                         <textarea name="description" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Activo</label>
+                        <select name="is_active">
+                            <option value="true">Sí</option>
+                            <option value="false">No</option>
+                        </select>
                     </div>
                     <div class="form-actions">
                         <button type="submit" class="btn btn-primary">Guardar</button>
@@ -256,12 +266,12 @@
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Mínimo de compra</label>
-                            <input type="number" name="min_purchase" step="0.01" value="0">
+                            <label>Compra X</label>
+                            <input type="number" name="buy_x_get_y" value="0" min="0">
                         </div>
                         <div class="form-group">
-                            <label>Compra X paga Y</label>
-                            <input type="number" name="buy_x_get_y" value="0">
+                            <label>Paga Y</label>
+                            <input type="number" name="pay_y" value="0" min="0">
                         </div>
                     </div>
                     <div class="form-row">
@@ -324,7 +334,7 @@
                             <th>Fecha de creación</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="usersTableBody">
                         <tr>
                             <td colspan="3" class="loading">Cargando usuarios...</td>
                         </tr>
@@ -352,7 +362,6 @@
         <footer>
             <p>© 2026 Restaurante Admin. Todos los derechos reservados.</p>
         </footer>
-    </div>
     </div>
 
     <script src="admin-script.js"></script>

@@ -280,6 +280,14 @@ section {
     background-color: var(--bg-tertiary);
 }
 
+.product-image.placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-tertiary);
+    font-size: 4rem;
+}
+
 .product-card.is-promotional .product-image {
     position: relative;
 }
@@ -475,6 +483,17 @@ section {
     border-radius: 6px;
     color: var(--text-secondary);
     font-size: 0.875rem;
+}
+
+.modal-badge {
+    background: var(--accent-color);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    text-align: center;
+    font-weight: 600;
+    letter-spacing: 0.5px;
 }
 
 /* Footer */
