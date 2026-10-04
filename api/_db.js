@@ -29,16 +29,21 @@ export async function getDb() {
 }
 
 async function prepareSchema(sql) {
-    // Una sola consulta barata: si existe la última columna añadida, el esquema está completo.
+    // Chequeo barato: el esquema está completo solo si existen TODAS las
+    // columnas añadidas por migraciones (products.promo_price y promotions.pay_y).
     const ready = await sql`
-        SELECT 1
+        SELECT
+            COUNT(*) FILTER (WHERE table_name = 'products' AND column_name = 'promo_price') AS products_ok,
+            COUNT(*) FILTER (WHERE table_name = 'promotions' AND column_name = 'pay_y') AS promotions_ok
         FROM information_schema.columns
         WHERE table_schema = 'public'
-          AND table_name = 'promotions'
-          AND column_name = 'pay_y'
-        LIMIT 1
+          AND (
+            (table_name = 'products' AND column_name = 'promo_price')
+            OR (table_name = 'promotions' AND column_name = 'pay_y')
+          )
     `;
-    if (ready.length > 0) return;
+    const row = ready[0];
+    if (row && Number(row.products_ok) > 0 && Number(row.promotions_ok) > 0) return;
     await createSchema(sql);
 }
 
@@ -62,10 +67,10 @@ async function createSchema(sql) {
             slug VARCHAR(255) UNIQUE NOT NULL,
             description TEXT,
             price DECIMAL(10, 2) NOT NULL,
+            promo_price DECIMAL(10, 2),
             is_available BOOLEAN DEFAULT true,
             category_id INTEGER REFERENCES categories(id) ON DELETE SET NULL,
             is_promotional BOOLEAN DEFAULT false,
-            promo_code VARCHAR(50),
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
@@ -106,10 +111,21 @@ async function createSchema(sql) {
         )
     `;
 
+    await sql`
+        CREATE TABLE IF NOT EXISTS settings (
+            key VARCHAR(100) PRIMARY KEY,
+            value TEXT NOT NULL,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    `;
+
     await sql`CREATE INDEX IF NOT EXISTS idx_products_category ON products (category_id)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_product_images_product ON product_images (product_id)`;
 
-    // "Compra X paga Y": buy_x_get_y guarda X y pay_y guarda Y.
-    // Debe ir al final: su existencia marca el esquema como completo.
+    // Migraciones idempotentes para bases creadas con versiones anteriores.
+    // OJO con el orden: la última migración (products.promo_price) es el marcador
+    // de "esquema completo"; si algo falla antes, el chequeo la volverá a ejecutar.
     await sql`ALTER TABLE promotions ADD COLUMN IF NOT EXISTS pay_y INTEGER DEFAULT 0`;
+    await sql`ALTER TABLE products DROP COLUMN IF EXISTS promo_code`;
+    await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS promo_price DECIMAL(10, 2) DEFAULT NULL`;
 }

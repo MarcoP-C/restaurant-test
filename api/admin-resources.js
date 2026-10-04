@@ -1,4 +1,4 @@
-// CRUD de administración: /api/admin-resources?type=categories|products|promotions|users[&id=N]
+// CRUD de administración: /api/admin-resources?type=categories|products|promotions|users|settings[&id=N]
 //   GET    -> lista            POST -> crea
 //   PUT    -> reemplaza (el formulario envía todos los campos)
 //   DELETE -> elimina
@@ -21,9 +21,12 @@ import {
     withNumbers
 } from './_utils.js';
 
-const TYPES = ['categories', 'products', 'promotions', 'users'];
+const TYPES = ['categories', 'products', 'promotions', 'users', 'settings'];
 const DISCOUNT_TYPES = ['percentage', 'fixed', 'buy_x_get_y', 'minimum'];
+const SETTINGS_KEYS = ['facebook_url', 'instagram_url', 'tiktok_url', 'whatsapp_url'];
 const MAX_MONEY = 99999999.99;
+const MAX_IMAGES = 6;
+const MAX_IMAGE_CHARS = 700000; // ~500 KB por imagen (data URL comprimida desde el panel)
 
 export default async function handler(req, res) {
     try {
@@ -32,7 +35,7 @@ export default async function handler(req, res) {
 
         const type = String(req.query?.type || '');
         if (!TYPES.includes(type)) {
-            return badRequest(res, 'Parámetro "type" requerido: categories|products|promotions|users');
+            return badRequest(res, 'Parámetro "type" requerido: categories|products|promotions|users|settings');
         }
 
         const sql = await getDb();
@@ -76,18 +79,8 @@ async function list(sql, type, res) {
             return sendJson(res, 200, { success: true, categories: rows });
         }
         case 'products': {
-            const rows = await sql`
-                SELECT p.id, p.name, p.slug, p.description, p.price, p.category_id,
-                       p.is_available, p.is_promotional, p.promo_code,
-                       p.created_at, p.updated_at, c.name AS category_name
-                FROM products p
-                LEFT JOIN categories c ON c.id = p.category_id
-                ORDER BY p.created_at DESC, p.id DESC
-            `;
-            return sendJson(res, 200, {
-                success: true,
-                products: rows.map((row) => withNumbers(row, ['price']))
-            });
+            const rows = await listProducts(sql);
+            return sendJson(res, 200, { success: true, products: rows });
         }
         case 'promotions': {
             const rows = await sql`
@@ -109,7 +102,40 @@ async function list(sql, type, res) {
             const rows = await sql`SELECT id, username, created_at FROM admins ORDER BY id ASC`;
             return sendJson(res, 200, { success: true, users: rows });
         }
+        case 'settings': {
+            return sendJson(res, 200, { success: true, settings: await readSettings(sql) });
+        }
     }
+}
+
+// Lista de productos con sus imágenes agrupadas en una sola consulta extra.
+async function listProducts(sql) {
+    const products = await sql`
+        SELECT p.id, p.name, p.slug, p.description, p.price, p.promo_price, p.category_id,
+               p.is_available, p.is_promotional, p.created_at, p.updated_at,
+               c.name AS category_name
+        FROM products p
+        LEFT JOIN categories c ON c.id = p.category_id
+        ORDER BY p.created_at DESC, p.id DESC
+    `;
+
+    const images = await sql`
+        SELECT product_id, image_url
+        FROM product_images
+        ORDER BY is_primary DESC, created_at ASC, id ASC
+    `;
+
+    const byProduct = new Map();
+    for (const image of images) {
+        const list = byProduct.get(image.product_id) || [];
+        if (list.length < 10) list.push(image.image_url);
+        byProduct.set(image.product_id, list);
+    }
+
+    return products.map((product) => ({
+        ...withNumbers(product, ['price', 'promo_price']),
+        images: byProduct.get(product.id) || []
+    }));
 }
 
 /* ----------------------------- Validaciones ----------------------------- */
@@ -135,7 +161,7 @@ function validateProduct(body) {
 
     const price = toNumber(body.price);
     if (price === null) return { error: 'El precio es requerido y debe ser un número' };
-    if (price < 0 || price > MAX_MONEY) return { error: 'El precio está fuera de rango' };
+    if (price <= 0 || price > MAX_MONEY) return { error: 'El precio está fuera de rango' };
 
     let categoryId = null;
     if (body.category_id !== undefined && body.category_id !== null && body.category_id !== '') {
@@ -143,8 +169,43 @@ function validateProduct(body) {
         if (categoryId === null || categoryId < 1) return { error: 'Categoría inválida' };
     }
 
-    const promoCode = cleanText(body.promo_code);
-    if (promoCode && promoCode.length > 50) return { error: 'El código de promoción no puede superar 50 caracteres' };
+    const isAvailable = toBool(body.is_available, true);
+    const isPromotional = toBool(body.is_promotional, false);
+
+    // Precio promocional: obligatorio cuando la promoción está activa,
+    // y siempre menor al precio original.
+    let promoPrice = null;
+    if (isPromotional) {
+        promoPrice = toNumber(body.promo_price);
+        if (promoPrice === null || promoPrice <= 0) {
+            return { error: 'Con la promoción activa, el precio promocional es requerido y debe ser mayor a 0' };
+        }
+        if (promoPrice >= price) {
+            return { error: 'El precio promocional debe ser menor al precio original' };
+        }
+        promoPrice = Math.round(promoPrice * 100) / 100;
+    }
+
+    // Imágenes: URLs https o data URLs comprimidas desde el panel.
+    let images = [];
+    if (body.images !== undefined && body.images !== null) {
+        if (!Array.isArray(body.images)) return { error: 'Imágenes inválidas' };
+        if (body.images.length > MAX_IMAGES) {
+            return { error: `Máximo ${MAX_IMAGES} imágenes por producto` };
+        }
+        for (const url of body.images) {
+            if (typeof url !== 'string') return { error: 'Imágenes inválidas' };
+            const trimmed = url.trim();
+            if (!trimmed) continue;
+            if (trimmed.length > MAX_IMAGE_CHARS) {
+                return { error: 'Una de las imágenes es demasiado grande' };
+            }
+            if (!/^(https?:\/\/|data:image\/)/i.test(trimmed)) {
+                return { error: 'Las imágenes deben ser URLs válidas (https://... o archivos de imagen)' };
+            }
+            images.push(trimmed);
+        }
+    }
 
     return {
         value: {
@@ -152,10 +213,12 @@ function validateProduct(body) {
             description,
             price: Math.round(price * 100) / 100,
             category_id: categoryId,
-            is_available: toBool(body.is_available, true),
-            is_promotional: toBool(body.is_promotional, false),
-            promo_code: promoCode
-        }
+            is_available: isAvailable,
+            is_promotional: isPromotional,
+            promo_price: promoPrice,
+            images
+        },
+        replaceImages: Array.isArray(body.images)
     };
 }
 
@@ -234,6 +297,58 @@ function validatePromotion(body) {
     };
 }
 
+/* ------------------------------ Configuración ---------------------------- */
+
+async function readSettings(sql) {
+    const rows = await sql`SELECT key, value FROM settings`;
+    const out = Object.create(null);
+    for (const row of rows) out[row.key] = row.value;
+    return out;
+}
+
+// Guarda (upsert) las redes sociales. Un valor vacío elimina la clave.
+async function saveSettings(sql, req, res) {
+    const body = getBody(req);
+    const input = body.settings && typeof body.settings === 'object' ? body.settings : null;
+    if (!input) return badRequest(res, 'Se requiere un objeto "settings"');
+
+    const entries = [];
+    for (const key of SETTINGS_KEYS) {
+        const raw = input[key];
+        if (raw === undefined || raw === null) continue;
+        const value = cleanText(raw);
+        if (value) {
+            if (value.length > 500) return badRequest(res, `"${key}" es demasiado largo`);
+            if (!/^https?:\/\/[^\s]+$/i.test(value)) {
+                return badRequest(res, `"${key}" debe ser una URL válida (https://...)`);
+            }
+            entries.push([key, value]);
+        } else {
+            entries.push([key, null]);
+        }
+    }
+    if (entries.length === 0) return badRequest(res, 'No hay cambios que guardar');
+
+    for (const [key, value] of entries) {
+        if (value === null) {
+            await sql`DELETE FROM settings WHERE key = ${key}`;
+        } else {
+            await sql`
+                INSERT INTO settings (key, value, updated_at)
+                VALUES (${key}, ${value}, CURRENT_TIMESTAMP)
+                ON CONFLICT (key) DO UPDATE
+                SET value = EXCLUDED.value, updated_at = CURRENT_TIMESTAMP
+            `;
+        }
+    }
+
+    return sendJson(res, 200, {
+        success: true,
+        message: 'Configuración guardada',
+        settings: await readSettings(sql)
+    });
+}
+
 /* ------------------------------- Ayudantes ------------------------------ */
 
 async function slugTaken(sql, table, slug, excludeId) {
@@ -256,6 +371,15 @@ async function uniqueSlug(sql, table, base, excludeId = 0) {
 async function categoryExists(sql, id) {
     const rows = await sql`SELECT 1 FROM categories WHERE id = ${id} LIMIT 1`;
     return rows.length > 0;
+}
+
+async function insertProductImages(sql, productId, images) {
+    for (let i = 0; i < images.length; i++) {
+        await sql`
+            INSERT INTO product_images (product_id, image_url, is_primary)
+            VALUES (${productId}, ${images[i]}, ${i === 0})
+        `;
+    }
 }
 
 /* -------------------------------- Crear -------------------------------- */
@@ -286,11 +410,13 @@ async function create(sql, type, req, res) {
 
             const slug = await uniqueSlug(sql, 'products', slugify(value.name));
             const rows = await sql`
-                INSERT INTO products (name, slug, description, price, category_id, is_available, is_promotional, promo_code)
-                VALUES (${value.name}, ${slug}, ${value.description}, ${value.price}, ${value.category_id},
-                        ${value.is_available}, ${value.is_promotional}, ${value.promo_code})
+                INSERT INTO products (name, slug, description, price, promo_price,
+                                      category_id, is_available, is_promotional)
+                VALUES (${value.name}, ${slug}, ${value.description}, ${value.price}, ${value.promo_price},
+                        ${value.category_id}, ${value.is_available}, ${value.is_promotional})
                 RETURNING id, name, slug
             `;
+            await insertProductImages(sql, rows[0].id, value.images);
             return sendJson(res, 201, { success: true, product: rows[0], message: 'Producto creado' });
         }
 
@@ -309,6 +435,10 @@ async function create(sql, type, req, res) {
             return sendJson(res, 201, { success: true, promotion: rows[0], message: 'Promoción creada' });
         }
 
+        case 'settings': {
+            return await saveSettings(sql, req, res);
+        }
+
         default:
             return methodNotAllowed(res, ['GET']);
     }
@@ -318,6 +448,7 @@ async function create(sql, type, req, res) {
 
 async function update(sql, type, id, req, res) {
     if (type === 'users') return methodNotAllowed(res, ['GET']);
+    if (type === 'settings') return await saveSettings(sql, req, res);
     if (id === null) return badRequest(res, 'ID es requerido');
 
     const body = getBody(req);
@@ -345,7 +476,7 @@ async function update(sql, type, id, req, res) {
         }
 
         case 'products': {
-            const { error, value } = validateProduct(body);
+            const { error, value, replaceImages } = validateProduct(body);
             if (error) return badRequest(res, error);
             if (value.category_id !== null && !(await categoryExists(sql, value.category_id))) {
                 return badRequest(res, 'La categoría seleccionada no existe');
@@ -361,12 +492,18 @@ async function update(sql, type, id, req, res) {
             const rows = await sql`
                 UPDATE products
                 SET name = ${value.name}, slug = ${slug}, description = ${value.description},
-                    price = ${value.price}, category_id = ${value.category_id},
-                    is_available = ${value.is_available}, is_promotional = ${value.is_promotional},
-                    promo_code = ${value.promo_code}, updated_at = CURRENT_TIMESTAMP
+                    price = ${value.price}, promo_price = ${value.promo_price},
+                    category_id = ${value.category_id}, is_available = ${value.is_available},
+                    is_promotional = ${value.is_promotional}, updated_at = CURRENT_TIMESTAMP
                 WHERE id = ${id}
                 RETURNING id, name, slug
             `;
+
+            if (replaceImages) {
+                await sql`DELETE FROM product_images WHERE product_id = ${id}`;
+                await insertProductImages(sql, id, value.images);
+            }
+
             return sendJson(res, 200, { success: true, product: rows[0], message: 'Producto actualizado' });
         }
 
@@ -394,6 +531,7 @@ async function update(sql, type, id, req, res) {
 
 async function remove(sql, type, id, res) {
     if (type === 'users') return methodNotAllowed(res, ['GET']);
+    if (type === 'settings') return methodNotAllowed(res, ['GET', 'POST', 'PUT']);
     if (id === null) return badRequest(res, 'ID es requerido');
 
     switch (type) {

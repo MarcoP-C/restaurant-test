@@ -1,17 +1,14 @@
 {
-  "name": "restaurant-test", 
+  "name": "restaurant-test",
   "version": "1.0.0",
   "description": "Sistema de menú de restaurante con Vercel Functions + Neon PostgreSQL",
   "type": "module",
-  "main": "api/index.js",
   "scripts": {
-    "test": "node api/test-db.js"
+    "test": "echo \"Sin tests: usa el panel admin para verificar la conexión\" && exit 0"
   },
   "dependencies": {
     "@neondatabase/serverless": "^0.10.4",
-    "bcryptjs": "^2.4.3",
-    "cookie-parser": "^1.4.6",
-    "cors": "^2.8.5"
+    "bcryptjs": "^2.4.3"
   },
   "keywords": ["vercel", "neon", "postgresql", "restaurant", "menu"],
   "author": "",

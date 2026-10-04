@@ -1,284 +1,118 @@
-# Restaurant Test - Sistema de Menú
+# Restaurant Test — Sistema de Menú
 
-Sistema completo de menú de restaurante con HTML/CSS/JavaScript vanilla + Vercel Functions + Neon PostgreSQL.
+Sistema de menú de restaurante con HTML/CSS/JavaScript vanilla + Vercel Functions + Neon PostgreSQL.
 
-## 📱 Vista Pública
+## 📱 Vista pública (`/`)
 
-- Ver menú de productos
-- Filtrar por categorías
-- Ver promociones activas
-- Tema claro/oscuro
-- Menú hamburguesa responsive
-- Modal con detalles de producto
+- Menú de productos con **carruseles de imágenes** (rotación automática, flechas y puntos)
+- Filtro de categorías con **botones (chips)**, no dropdowns
+- **Precios con promoción**: el precio promocional se muestra como principal y el original tachado, con el ahorro
+- Promociones activas con vigencia
+- Tema claro/oscuro persistente
+- Redes sociales en el pie de página (configuradas desde el panel)
+- Menú hamburguesa responsive + modal de detalle de producto
 
-## 🔧 Vista Administrativa
+## 🔧 Panel de administración (`/admin.html`)
 
-- CRUD completo de productos
-- CRUD completo de categorías
-- CRUD completo de promociones
-- Tipos de descuentos:
-  - Porcentaje (%)
-  - Fijo ($)
-  - "Compra X paga Y" (ej: Compra 2 paga 1)
-  - Mínimo de compra
-- Sistema de autenticación básico para admin
+- **Una vista por menú**: Productos, Categorías, Promociones, Usuarios y Configuración
+- **Asistente (wizard) por pasos** para crear/editar registros, con indicador de progreso, validación y confirmación final
+- CRUD completo de productos, categorías y promociones
+- **Productos**:
+  - Precio original + precio promocional (obligatorio si la promoción está activa y siempre menor al original)
+  - Selección de **una o más imágenes** (máx. 6) desde el equipo, con compresión automática en el navegador, o por URL
+  - La primera imagen es la principal
+- **Categorías**: nombre, descripción y estado activo
+- **Promociones**: porcentaje, monto fijo, "Compra X paga Y" (ej. 2x1) y mínimo de compra, con vigencia
+- **Configuración**:
+  - Redes sociales (Facebook, Instagram, TikTok, WhatsApp) mostradas en el sitio público
+  - Cambio de contraseña
+  - Prueba de conexión a la base de datos
+- Tema claro/oscuro, toasts, modales de confirmación
 
-## 🗄️ Base de Datos (Neon PostgreSQL)
+## 🗄️ Base de datos (Neon PostgreSQL)
 
-```
-categories
-├── id
-├── name
-├── slug
-├── description
-├── is_active
-└── timestamps
-
-products
-├── id
-├── name
-├── slug
-├── description
-├── price
-├── is_available
-├── category_id
-├── is_promotional
-├── promo_code
-└── timestamps
-
-promotions
-├── id
-├── name
-├── description
-├── discount_type
-├── discount_value
-├── min_purchase
-├── buy_x_get_y
-├── is_active
-├── start_date
-└── end_date
-
-product_images
-├── id
-├── product_id
-├── image_url
-├── is_primary
-└── timestamps
-
-admins
-├── id
-├── username
-├── password_hash
-└── created_at
-```
-
-## 🚀 Instrucciones de Instalación
-
-### Paso 1: Instalar dependencias
-
-```bash
-cd /Users/marcopc/restaurant-test
-npm install
-```
-
-### Paso 2: Configurar variables de entorno
-
-Copiar el archivo de ejemplo y configurar las variables:
-
-```bash
-cp .env.example .env
-```
-
-Editar `.env` y configurar:
+El esquema se crea/migra automáticamente en la primera petición (idempotente):
 
 ```
-DATABASE_URL=postgresql://tu-connection-string
-ADMIN_PASSWORD=tu-password-seguro
+categories (id, name, slug, description, is_active, timestamps)
+products (id, name, slug, description, price, promo_price, is_available,
+          category_id → categories, is_promotional, timestamps)
+product_images (id, product_id → products, image_url, is_primary, created_at)
+promotions (id, name, description, discount_type, discount_value, min_purchase,
+            buy_x_get_y, pay_y, is_active, start_date, end_date, created_at)
+admins (id, username, password_hash, created_at)
+settings (key, value, updated_at)   -- redes sociales etc.
 ```
 
-**Opcional:** Si usas Vercel Storage, configura:
+Migraciones automáticas para bases existentes: agrega `products.promo_price`, `promotions.pay_y`, crea `settings` y elimina el obsoleto `products.promo_code`.
 
-```
-BUCKET_URL=https://storage-api-url.vercel.app
-```
+## 🚀 Instalación y despliegue
 
-### Paso 3: Inicializar base de datos
+### 1. Variables de entorno (en Vercel)
 
-Crear el admin por defecto y las categorías:
+- `DATABASE_URL` — connection string de Neon
+- `ADMIN_PASSWORD` — contraseña del admin (mínimo 8 caracteres; **no** uses `changeme123`)
+- `SESSION_SECRET` — cadena aleatoria de 16+ caracteres para firmar sesiones
 
-```bash
-curl -X POST http://localhost:3000/api/admin/initial-setup
-```
+### 2. Desplegar
 
-Esto creará:
-- Usuario admin: `admin`
-- Contraseña: `changeme123` (¡Cámbiala en producción!)
+1. Sube el repo a GitHub e impórtalo en Vercel
+2. Framework Preset: **Other** · Build Command: vacío · Output Directory: vacío
+3. Configura las variables de entorno anteriores
+4. Deploy
 
-### Paso 4: Desplegar en Vercel
+### 3. Primer acceso al panel
 
-1. Crear repo en GitHub (si no existe)
+En `/admin.html`, inicia sesión con usuario `admin` y la contraseña de `ADMIN_PASSWORD`.
+Si no existe ningún admin, se crea automáticamente en ese primer login. Después cámbiala desde **Configuración → Seguridad**.
 
-2. En Vercel:
-   - Importar repo `restaurant-test`
-   - Framework Preset: **Other**
-   - Build Command: dejar vacío
-   - Output Directory: dejar vacío
-   - Root Directory: `./`
+## 📡 API
 
-3. Configurar variables de entorno en Vercel:
-   - **DATABASE_URL**: tu connection string de Neon
-   - **ADMIN_PASSWORD**: tu contraseña segura
-   - **SESSION_SECRET**: `tu-secret-key-random`
+**Pública** (`GET /api/resources?type=...`): `categories`, `products` (con imágenes y `promo_price`), `promotions` (solo vigentes y activas), `settings`.
 
-4. Desplegar
+**Panel** (requiere sesión; las escrituras además exigen `X-Requested-With: fetch` y mismo origen):
 
-### Paso 5: Acceder a la aplicación
+- `GET/POST/PUT/DELETE /api/admin-resources?type=categories|products|promotions[&id=N]`
+- `GET/POST /api/admin-resources?type=users|settings`
+- `POST /api/admin-auth?action=login|logout|password` · `GET /api/admin-auth?action=check`
+- `GET /api/test-db`
 
-**Vista pública:**
-- URL de Vercel: `https://tu-proyecto.vercel.app`
-
-**Vista administrativa:**
-- URL: `https://tu-proyecto.vercel.app/admin.html`
-- Usuario: `admin`
-- Contraseña: la configurada en `ADMIN_PASSWORD`
-
-## 🎨 Características
-
-### Tema Claro/Oscuro
-
-El proyecto soporta ambos temas automáticamente:
-- Botón de cambio de tema en el header
-- Preferencia guardada en localStorage
-- Transiciones suaves entre temas
-
-### Responsive
-
-- Menú hamburguesa para móviles
-- Grid de productos responsive
-- Modales adaptativos
-- Tablas con scroll horizontal en móviles
-
-### Descuentos y Promociones
-
-Soporta múltiples tipos de descuentos:
-- **Porcentaje**: 20% de descuento
-- **Fijo**: $5.00 de descuento
-- **Compra X paga Y**: Compra 2 paga 1
-- **Mínimo de compra**: Min. $50.00
-
-### Gestión de Imágenes
-
-- Múltiples imágenes por producto
-- Imagen principal destacada
-- API para subir imágenes (configurable)
-- Placeholder si no hay imágenes
-
-## 🔐 Seguridad
-
-- **No hay credenciales en el frontend** - TODO pasa por Vercel Functions
-- **Autenticación de admin** - bcrypt con hash
-- **Cifrado de sesiones** - Cookie server-side
-- **Prevenir exposición** - Variables de entorno en servidor
-
-## 📦 Estructura del Proyecto
+## 📦 Estructura del proyecto
 
 ```
 restaurant-test/
 ├── api/
-│   ├── db.js
-│   ├── test-db.js
-│   ├── categories.js
-│   ├── products.js
-│   ├── promotions.js
-│   └── admin/
-│       ├── login.js
-│       ├── logout.js
-│       ├── auth-check.js
-│       ├── categories.js
-│       ├── products.js
-│       ├── promotions.js
-│       ├── products-images.js
-│       └── initial-setup.js
+│   ├── _db.js               # conexión + creación/migración del esquema
+│   ├── _auth.js             # sesiones firmadas (HMAC) + protección CSRF
+│   ├── _utils.js            # helpers compartidos
+│   ├── admin-auth.js        # login/logout/check/cambio de contraseña
+│   ├── admin-resources.js   # CRUD admin + settings
+│   ├── resources.js         # lectura pública
+│   └── test-db.js           # prueba de conexión
 ├── public/
-│   ├── index.html (vista pública)
-│   ├── admin.html (vista admin)
-│   ├── script.js
-│   ├── admin-script.js
-│   └── styles.css
+│   ├── index.html           # sitio público
+│   ├── admin.html           # panel de administración
+│   ├── script.js            # lógica del sitio público
+│   ├── admin-script.js      # lógica del panel
+│   └── styles.css           # estilos compartidos (tema claro/oscuro)
 ├── package.json
+├── vercel.json
 ├── .env.example
-├── .gitignore
 └── README.md
 ```
 
-## 🛠️ Scripts
+## 🔐 Seguridad
 
-```bash
-# Instalar dependencias
-npm install
+- Sin credenciales en el frontend; todo pasa por Vercel Functions
+- bcrypt para contraseñas + cookies de sesión firmadas (HttpOnly, SameSite)
+- Cambiar la contraseña invalida las sesiones anteriores
+- Protección CSRF en escrituras (mismo origen + cabecera `X-Requested-With`)
 
-# Verificar sintaxis (si node está instalado)
-node --check api/*.js
+## 📝 Notas
 
-# Ejecutar en local con Vercel dev
-vercel dev
-```
-
-## 🎯 Tipos de Descuento
-
-### 1. Porcentaje
-- **Ejemplo**: 20% de descuento
-- **Valor**: 20
-- **Tipo**: percentage
-- **Efecto**: `Precio * (1 - 0.20)`
-
-### 2. Fijo
-- **Ejemplo**: $5.00 de descuento
-- **Valor**: 5
-- **Tipo**: fixed
-- **Efecto**: `Precio - 5`
-
-### 3. Compra X paga Y
-- **Ejemplo**: Compra 2 paga 1
-- **Valor**: 2
-- **Tipo**: buy_x_get_y
-- **Efecto**: `Compra X, obtienes Y`
-
-### 4. Mínimo de compra
-- **Ejemplo**: Min. $50.00
-- **Valor**: 50
-- **Tipo**: minimum
-- **Efecto**: Solo aplica si el subtotal ≥ $50.00
-
-## 📝 Notas Importantes
-
-1. **Cambiar contraseña de admin**: Después de configurar en producción, cambie la contraseña en el panel de administración
-2. **Imagen storage**: Para producción, considera usar Vercel Storage o Cloudinary
-3. **Caching**: El proyecto actualmente hace fetch directo a la base de datos. Para producción, considera implementar caché
-4. **Validación**: Puedes añadir más validaciones en los formularios
-5. **SEO**: Puedes añadir meta tags y sitemap
-
-## 🚀 Plan de Mejoras
-
-- [ ] Implementar caché con Redis
-- [ ] Integrar con Vercel Storage para imágenes
-- [ ] Agregar búsquedas de productos
-- [ ] Implementar filtros avanzados
-- [ ] Agregar reseñas de usuarios
-- [ ] Implementar carrito de compras
-- [ ] Agregar calendario de eventos
-- [ ] Integrar con pasarela de pagos
-- [ ] Analytics y estadísticas
-- [ ] Notificaciones push
+- Las imágenes se comprimen en el navegador (máx. 1200px, JPEG ~82%) y se guardan en la base como data URLs. Para catálogos grandes, considera Vercel Blob o Cloudinary.
+- El sitio público usa caché de CDN corta (`s-maxage=10`): los cambios del panel se ven en segundos.
 
 ## 📄 Licencia
 
 MIT
-
-## 👨‍💻 Autor
-
-Claude Code
-
----
-
-**¡Próximamente: Backend completo con más funcionalidades!**

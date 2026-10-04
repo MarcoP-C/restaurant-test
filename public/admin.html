@@ -3,365 +3,347 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel Administrativo - Restaurante</title>
+    <meta name="description" content="Panel de administración del restaurante">
+    <title>Panel de Administración — Restaurante</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700&display=swap" rel="stylesheet">
+
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <!-- Login Section -->
-    <div id="loginSection" class="login-section">
-        <div class="login-container">
-            <div class="login-header">
-                <h1>🛠️ Panel Admin</h1>
-                <p>Ingresa tus credenciales para continuar</p>
-            </div>
+
+    <!-- ==================== Login ==================== -->
+    <div id="loginScreen" class="login-screen active">
+        <div class="login-card">
+            <div class="login-icon">🛠️</div>
+            <h1 class="font-display">Panel Admin</h1>
+            <p class="login-sub">Ingresa tus credenciales para continuar</p>
+
             <form id="loginForm">
                 <div class="form-group">
-                    <label for="username">Usuario</label>
-                    <input type="text" id="username" name="username" required autocomplete="username">
+                    <label for="loginUser">Usuario</label>
+                    <input type="text" id="loginUser" name="username" required autocomplete="username" placeholder="admin">
                 </div>
                 <div class="form-group">
-                    <label for="password">Contraseña</label>
-                    <input type="password" id="password" name="password" required autocomplete="current-password">
+                    <label for="loginPass">Contraseña</label>
+                    <input type="password" id="loginPass" name="password" required autocomplete="current-password" placeholder="••••••••">
                 </div>
-                <div class="form-actions">
-                    <button type="button" class="btn btn-primary btn-block" onclick="handleLogin()">Iniciar Sesión</button>
-                </div>
+                <button type="submit" class="btn btn-primary btn-block" id="loginBtn">Iniciar sesión</button>
             </form>
-            <p class="login-note">Usuario: admin | Contraseña: changeme123</p>
+
+            <p class="login-hint">💡 Primera vez: el usuario se crea con <strong>admin</strong> y la contraseña configurada en <strong>ADMIN_PASSWORD</strong>.</p>
         </div>
     </div>
 
-    <!-- Admin Dashboard (oculto inicialmente) -->
-    <div id="adminDashboard" class="main-content" style="display: none;">
+    <!-- ==================== Panel ==================== -->
+    <div id="adminShell" class="admin-shell">
+
         <!-- Sidebar -->
         <aside class="sidebar" id="sidebar">
-            <div class="sidebar-header">
-                <h2>🛠️ Panel Admin</h2>
+            <div class="sidebar-brand">
+                <span class="brand-emoji">🍽️</span>
+                <div>
+                    <span class="brand-name font-display">La <span class="accent" style="color:var(--accent)">Cocina</span></span>
+                    <span class="brand-tag">Panel admin</span>
+                </div>
             </div>
-            <nav class="sidebar-nav">
-                <ul>
-                    <li>
-                        <a href="#products-section" class="sidebar-link active">
-                            <span>📦 Productos</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#categories-section" class="sidebar-link">
-                            <span>📂 Categorías</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#promotions-section" class="sidebar-link">
-                            <span>🎉 Promociones</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#users-section" class="sidebar-link">
-                            <span>👤 Usuarios</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#settings-section" class="sidebar-link">
-                            <span>⚙️ Configuración</span>
-                        </a>
-                    </li>
-                </ul>
-            </nav>
-            <div class="sidebar-footer">
-                <button id="logoutBtn" class="btn btn-danger">
-                    🚪 Cerrar Sesión
+
+            <nav class="sidebar-nav" aria-label="Secciones del panel">
+                <button class="nav-item active" data-view="products">
+                    <span class="nav-icon">📦</span> Productos
                 </button>
+                <button class="nav-item" data-view="categories">
+                    <span class="nav-icon">📂</span> Categorías
+                </button>
+                <button class="nav-item" data-view="promotions">
+                    <span class="nav-icon">🎉</span> Promociones
+                </button>
+                <button class="nav-item" data-view="users">
+                    <span class="nav-icon">👤</span> Usuarios
+                </button>
+                <button class="nav-item" data-view="settings">
+                    <span class="nav-icon">⚙️</span> Configuración
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button class="btn btn-danger" id="logoutBtn">🚪 Cerrar sesión</button>
             </div>
         </aside>
 
-        <!-- Overlay -->
-        <div class="overlay" id="overlay"></div>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-        <!-- Header -->
-        <header>
-            <div class="header-content">
-                <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
-                    <span class="hamburger">
-                        <span></span>
-                        <span></span>
-                        <span></span>
-                    </span>
+        <!-- Contenido principal -->
+        <div class="admin-main">
+            <header class="admin-topbar">
+                <button class="hamburger" id="menuToggle" aria-label="Abrir menú">
+                    <span></span><span></span><span></span>
                 </button>
-                <h1 class="logo">🍔 RESTAURANTE ADMIN</h1>
-                <button class="theme-toggle" id="themeToggle" aria-label="Cambiar tema">
-                    <span class="theme-icon" id="themeIcon">🌙</span>
-                </button>
-            </div>
-        </header>
+                <h1 class="font-display" id="topbarTitle">Productos</h1>
+                <button class="theme-toggle" id="themeToggle" aria-label="Cambiar tema"></button>
+            </header>
 
-        <!-- Products Section -->
-        <section id="products-section">
-            <div class="section-header">
-                <h2>📦 Productos</h2>
-                <button class="btn btn-primary" onclick="showProductForm()">
-                    ➕ Agregar Producto
-                </button>
-            </div>
+            <main class="admin-content">
 
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Nombre</th>
-                            <th>Categoría</th>
-                            <th>Precio</th>
-                            <th>Disponible</th>
-                            <th>Promoción</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="productsTableBody">
-                        <tr>
-                            <td colspan="7" class="loading">Cargando productos...</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="form-container" id="productFormContainer" style="display: none;">
-                <form id="productForm" method="post">
-                    <input type="hidden" name="id">
-                    <div class="form-group">
-                        <label>Nombre</label>
-                        <input type="text" name="name" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Descripción</label>
-                        <textarea name="description" rows="3"></textarea>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Precio ($)</label>
-                            <input type="number" name="price" step="0.01" required>
+                <!-- ============ Vista: Productos ============ -->
+                <section class="view active" id="view-products" aria-label="Productos">
+                    <div class="view-head">
+                        <div>
+                            <h2 class="font-display">Productos</h2>
+                            <span class="view-sub">Administra el menú: alta, edición, precios e imágenes</span>
                         </div>
-                        <div class="form-group">
-                            <label>Categoría</label>
-                            <select name="category_id" data-category-select required>
-                                <option value="">Seleccionar categoría</option>
-                            </select>
+                        <button class="btn btn-primary" id="addProductBtn">➕ Agregar producto</button>
+                    </div>
+                    <div class="table-wrap">
+                        <div class="table-scroll">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Producto</th>
+                                        <th>Categoría</th>
+                                        <th>Precio</th>
+                                        <th>Disponible</th>
+                                        <th>Promoción</th>
+                                        <th style="text-align:right">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="productsTableBody">
+                                    <tr><td colspan="6" class="loading-state">Cargando productos...</td></tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Disponible</label>
-                            <select name="is_available">
-                                <option value="true">Sí</option>
-                                <option value="false">No</option>
-                            </select>
+                </section>
+
+                <!-- ============ Vista: Categorías ============ -->
+                <section class="view" id="view-categories" aria-label="Categorías">
+                    <div class="view-head">
+                        <div>
+                            <h2 class="font-display">Categorías</h2>
+                            <span class="view-sub">Organiza tus productos por tipo de platillo</span>
                         </div>
-                        <div class="form-group">
-                            <label>Promoción</label>
-                            <select name="is_promotional">
-                                <option value="false">No</option>
-                                <option value="true">Sí</option>
-                            </select>
-                        </div>
+                        <button class="btn btn-primary" id="addCategoryBtn">➕ Agregar categoría</button>
                     </div>
-                    <div class="form-group">
-                        <label>Código de Promoción (opcional)</label>
-                        <input type="text" name="promo_code">
-                    </div>
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary">Guardar</button>
-                        <button type="button" class="btn btn-secondary" onclick="hideProductForm()">Cancelar</button>
-                    </div>
-                </form>
-            </div>
-        </section>
-
-        <!-- Categories Section -->
-        <section id="categories-section">
-            <div class="section-header">
-                <h2>📂 Categorías</h2>
-                <button class="btn btn-primary" onclick="showCategoryForm()">
-                    ➕ Agregar Categoría
-                </button>
-            </div>
-
-            <div class="form-container" id="categoryFormContainer" style="display: none;">
-                <form id="categoryForm" method="post">
-                    <input type="hidden" name="id">
-                    <div class="form-group">
-                        <label>Nombre</label>
-                        <input type="text" name="name" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Descripción</label>
-                        <textarea name="description" rows="3"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label>Activo</label>
-                        <select name="is_active">
-                            <option value="true">Sí</option>
-                            <option value="false">No</option>
-                        </select>
-                    </div>
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary">Guardar</button>
-                        <button type="button" class="btn btn-secondary" onclick="hideCategoryForm()">Cancelar</button>
-                    </div>
-                </form>
-            </div>
-
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Nombre</th>
-                            <th>Descripción</th>
-                            <th>Activo</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="categoriesTableBody">
-                        <tr>
-                            <td colspan="5" class="loading">Cargando categorías...</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <!-- Promotions Section -->
-        <section id="promotions-section">
-            <div class="section-header">
-                <h2>🎉 Promociones</h2>
-                <button class="btn btn-primary" onclick="showPromotionForm()">
-                    ➕ Agregar Promoción
-                </button>
-            </div>
-
-            <div class="form-container" id="promotionFormContainer" style="display: none;">
-                <form id="promotionForm" method="post">
-                    <input type="hidden" name="id">
-                    <div class="form-group">
-                        <label>Nombre</label>
-                        <input type="text" name="name" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Descripción</label>
-                        <textarea name="description" rows="3"></textarea>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Tipo de descuento</label>
-                            <select name="discount_type" required>
-                                <option value="percentage">Porcentaje (%)</option>
-                                <option value="fixed">Fijo ($)</option>
-                                <option value="buy_x_get_y">Compra X paga Y</option>
-                                <option value="minimum">Mínimo de compra</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Valor del descuento</label>
-                            <input type="number" name="discount_value" step="0.01" required>
+                    <div class="table-wrap">
+                        <div class="table-scroll">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Nombre</th>
+                                        <th>Descripción</th>
+                                        <th>Estado</th>
+                                        <th style="text-align:right">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="categoriesTableBody">
+                                    <tr><td colspan="4" class="loading-state">Cargando categorías...</td></tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Compra X</label>
-                            <input type="number" name="buy_x_get_y" value="0" min="0">
+                </section>
+
+                <!-- ============ Vista: Promociones ============ -->
+                <section class="view" id="view-promotions" aria-label="Promociones">
+                    <div class="view-head">
+                        <div>
+                            <h2 class="font-display">Promociones</h2>
+                            <span class="view-sub">Descuentos por porcentaje, monto fijo, 2x1 o mínimo de compra</span>
                         </div>
-                        <div class="form-group">
-                            <label>Paga Y</label>
-                            <input type="number" name="pay_y" value="0" min="0">
+                        <button class="btn btn-primary" id="addPromotionBtn">➕ Agregar promoción</button>
+                    </div>
+                    <div class="table-wrap">
+                        <div class="table-scroll">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Nombre</th>
+                                        <th>Tipo</th>
+                                        <th>Detalle</th>
+                                        <th>Vigencia</th>
+                                        <th>Estado</th>
+                                        <th style="text-align:right">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="promotionsTableBody">
+                                    <tr><td colspan="6" class="loading-state">Cargando promociones...</td></tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Fecha inicio</label>
-                            <input type="date" name="start_date">
+                </section>
+
+                <!-- ============ Vista: Usuarios ============ -->
+                <section class="view" id="view-users" aria-label="Usuarios">
+                    <div class="view-head">
+                        <div>
+                            <h2 class="font-display">Usuarios</h2>
+                            <span class="view-sub">Administradores con acceso al panel</span>
                         </div>
-                        <div class="form-group">
-                            <label>Fecha fin</label>
-                            <input type="date" name="end_date" required>
+                    </div>
+                    <div class="table-wrap">
+                        <div class="table-scroll">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Usuario</th>
+                                        <th>Fecha de creación</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="usersTableBody">
+                                    <tr><td colspan="3" class="loading-state">Cargando usuarios...</td></tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label>Activo</label>
-                        <select name="is_active">
-                            <option value="true">Sí</option>
-                            <option value="false">No</option>
-                        </select>
+                </section>
+
+                <!-- ============ Vista: Configuración ============ -->
+                <section class="view" id="view-settings" aria-label="Configuración">
+                    <div class="view-head">
+                        <div>
+                            <h2 class="font-display">Configuración</h2>
+                            <span class="view-sub">Redes sociales, seguridad y datos del sitio</span>
+                        </div>
                     </div>
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary">Guardar</button>
-                        <button type="button" class="btn btn-secondary" onclick="hidePromotionForm()">Cancelar</button>
+
+                    <!-- Redes sociales -->
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-icon">📱</span>
+                            <div>
+                                <h3 class="font-display">Redes sociales</h3>
+                                <span class="card-sub">Los links se muestran en el pie de página del sitio público</span>
+                            </div>
+                        </div>
+
+                        <form id="socialForm">
+                            <div class="form-group">
+                                <label for="setFacebook">Facebook</label>
+                                <div class="social-field">
+                                    <span class="social-icon" style="color:#1877F2">
+                                        <svg fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073C24 5.446 18.627.073 12 .073S0 5.446 0 12.073c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                                    </span>
+                                    <input type="url" id="setFacebook" placeholder="https://facebook.com/tu-pagina" data-setting="facebook_url">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="setInstagram">Instagram</label>
+                                <div class="social-field">
+                                    <span class="social-icon" style="color:#E4405F">
+                                        <svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+                                    </span>
+                                    <input type="url" id="setInstagram" placeholder="https://instagram.com/tu-cuenta" data-setting="instagram_url">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="setTiktok">TikTok</label>
+                                <div class="social-field">
+                                    <span class="social-icon" style="color:#000">
+                                        <svg fill="currentColor" viewBox="0 0 24 24"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.06 6.15-1.62.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.51 2.87 1.06-.08 2.06-.71 2.62-1.62.18-.29.29-.61.29-.94.02-2.71.01-5.42.02-8.13.03-1.21.53-2.37 1.35-3.29 1.17-1.3 2.93-2.05 4.71-2.02z"/></svg>
+                                    </span>
+                                    <input type="url" id="setTiktok" placeholder="https://tiktok.com/@tu-cuenta" data-setting="tiktok_url">
+                                </div>
+                            </div>
+
+                            <div class="form-group" style="margin-bottom:0">
+                                <label for="setWhatsapp">WhatsApp</label>
+                                <div class="social-field">
+                                    <span class="social-icon" style="color:#25D366">
+                                        <svg fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                                    </span>
+                                    <input type="url" id="setWhatsapp" placeholder="https://wa.me/521234567890" data-setting="whatsapp_url">
+                                </div>
+                            </div>
+
+                            <div class="settings-actions">
+                                <button type="submit" class="btn btn-primary" id="saveSocialBtn">💾 Guardar redes sociales</button>
+                            </div>
+                        </form>
                     </div>
-                </form>
-            </div>
 
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Nombre</th>
-                            <th>Tipo</th>
-                            <th>Valor</th>
-                            <th>Descuento</th>
-                            <th>Activo</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="promotionsTableBody">
-                        <tr>
-                            <td colspan="7" class="loading">Cargando promociones...</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
+                    <!-- Seguridad -->
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-icon">🔐</span>
+                            <div>
+                                <h3 class="font-display">Seguridad</h3>
+                                <span class="card-sub">Cambia la contraseña del administrador (mínimo 8 caracteres)</span>
+                            </div>
+                        </div>
 
-        <!-- Users Section -->
-        <section id="users-section">
-            <div class="section-header">
-                <h2>👤 Usuarios</h2>
-            </div>
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Usuario</th>
-                            <th>Fecha de creación</th>
-                        </tr>
-                    </thead>
-                    <tbody id="usersTableBody">
-                        <tr>
-                            <td colspan="3" class="loading">Cargando usuarios...</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
+                        <form id="passwordForm">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="currentPassword">Contraseña actual</label>
+                                    <input type="password" id="currentPassword" required autocomplete="current-password">
+                                </div>
+                                <div class="form-group">
+                                    <label for="newPassword">Nueva contraseña</label>
+                                    <input type="password" id="newPassword" required minlength="8" autocomplete="new-password">
+                                </div>
+                            </div>
+                            <div class="settings-actions">
+                                <button type="submit" class="btn btn-primary">🔑 Actualizar contraseña</button>
+                            </div>
+                        </form>
+                    </div>
 
-        <!-- Settings Section -->
-        <section id="settings-section">
-            <div class="section-header">
-                <h2>⚙️ Configuración</h2>
-            </div>
-            <div class="card">
-                <h3>Información del admin</h3>
-                <p><strong>Usuario:</strong> admin</p>
-                <p><strong>Contraseña:</strong> changeme123</p>
-                <p style="color: var(--accent-color); margin-top: 1rem;">
-                    ⚠️ <strong>IMPORTANTE:</strong> Cambia esta contraseña en producción
-                </p>
-            </div>
-        </section>
+                    <!-- Acerca de -->
+                    <div class="card" style="margin-bottom:0">
+                        <div class="card-header">
+                            <span class="card-icon">ℹ️</span>
+                            <div>
+                                <h3 class="font-display">Acerca del panel</h3>
+                                <span class="card-sub">Datos del sistema</span>
+                            </div>
+                        </div>
+                        <p class="cell-strong" style="margin-bottom:0.3rem">🧪 Prueba de conexión a la base de datos</p>
+                        <p class="cell-muted" style="margin-bottom:1rem">Verifica que la conexión con PostgreSQL/Neon esté activa.</p>
+                        <button class="btn btn-secondary" id="testDbBtn">Probar conexión</button>
+                    </div>
+                </section>
 
-        <!-- Footer -->
-        <footer>
-            <p>© 2026 Restaurante Admin. Todos los derechos reservados.</p>
-        </footer>
+            </main>
+
+            <footer class="admin-footer">
+                <p>© 2026 Restaurante — Panel de administración</p>
+            </footer>
+        </div>
+    </div>
+
+    <!-- ==================== Asistente (wizard) ==================== -->
+    <div class="wizard-overlay" id="wizardOverlay" aria-hidden="true">
+        <div class="wizard" role="dialog" aria-modal="true" aria-labelledby="wizardTitle">
+            <div class="wizard-header">
+                <div>
+                    <h3 class="font-display" id="wizardTitle">Asistente</h3>
+                    <span class="wizard-sub" id="wizardSubtitle"></span>
+                </div>
+                <button class="btn-icon" id="wizardClose" aria-label="Cerrar asistente">✕</button>
+            </div>
+            <div class="wizard-steps" id="wizardSteps"></div>
+            <div class="wizard-body" id="wizardBody"></div>
+            <div class="wizard-footer" id="wizardFooter"></div>
+        </div>
+    </div>
+
+    <!-- ==================== Confirmación ==================== -->
+    <div class="confirm-overlay" id="confirmOverlay" aria-hidden="true">
+        <div class="confirm-box" role="alertdialog" aria-modal="true">
+            <div class="confirm-icon">⚠️</div>
+            <h3 class="font-display" id="confirmTitle">¿Confirmar acción?</h3>
+            <p id="confirmMessage"></p>
+            <div class="confirm-actions">
+                <button class="btn btn-secondary" id="confirmCancel">Cancelar</button>
+                <button class="btn btn-danger" id="confirmOk">Sí, continuar</button>
+            </div>
+        </div>
     </div>
 
     <script src="admin-script.js"></script>

@@ -1,4 +1,4 @@
-// Lectura pública de datos: /api/resources?type=categories|products|promotions
+// Lectura pública de datos: /api/resources?type=categories|products|promotions|settings
 import { getDb } from './_db.js';
 import {
     TIMEZONE,
@@ -9,7 +9,7 @@ import {
     withNumbers
 } from './_utils.js';
 
-const TYPES = ['categories', 'products', 'promotions'];
+const TYPES = ['categories', 'products', 'promotions', 'settings'];
 
 export default async function handler(req, res) {
     if (req.method !== 'GET') {
@@ -18,7 +18,7 @@ export default async function handler(req, res) {
 
     const type = String(req.query?.type || '');
     if (!TYPES.includes(type)) {
-        return badRequest(res, 'Parámetro "type" requerido: categories|products|promotions');
+        return badRequest(res, 'Parámetro "type" requerido: categories|products|promotions|settings');
     }
 
     try {
@@ -51,10 +51,21 @@ export default async function handler(req, res) {
                     ORDER BY promotions.end_date ASC
                 `).map((row) => withNumbers(row, ['discount_value', 'min_purchase']));
                 break;
+
+            case 'settings': {
+                const settingRows = await sql`SELECT key, value FROM settings`;
+                const settings = Object.create(null);
+                for (const row of settingRows) settings[row.key] = row.value;
+                rows = [settings];
+                break;
+            }
         }
 
         // Caché corta en el CDN: los cambios del admin se ven en segundos.
         res.setHeader('Cache-Control', 'public, s-maxage=10, stale-while-revalidate=30');
+        if (type === 'settings') {
+            return sendJson(res, 200, { success: true, settings: rows[0] });
+        }
         return sendJson(res, 200, { success: true, [type]: rows });
     } catch (error) {
         return handleError(res, error, `resources:${type}`);
@@ -63,9 +74,8 @@ export default async function handler(req, res) {
 
 async function listProducts(sql) {
     const products = await sql`
-        SELECT p.id, p.name, p.slug, p.description, p.price, p.category_id,
-               p.is_promotional, p.promo_code,
-               c.name AS category_name, c.slug AS category_slug
+        SELECT p.id, p.name, p.slug, p.description, p.price, p.promo_price, p.category_id,
+               p.is_promotional, c.name AS category_name, c.slug AS category_slug
         FROM products p
         LEFT JOIN categories c ON c.id = p.category_id
         WHERE p.is_available = true
@@ -90,7 +100,7 @@ async function listProducts(sql) {
     }
 
     return products.map((product) => ({
-        ...withNumbers(product, ['price']),
+        ...withNumbers(product, ['price', 'promo_price']),
         images: byProduct.get(product.id) || []
     }));
 }
