@@ -230,10 +230,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const container = track.closest('.carousel');
             const prevBtn = container.querySelector('[data-dir="prev"]');
             const nextBtn = container.querySelector('[data-dir="next"]');
-            if (prevBtn) prevBtn.addEventListener('click', () => { goTo(index - 1); start(); });
-            if (nextBtn) nextBtn.addEventListener('click', () => { goTo(index + 1); start(); });
+            if (prevBtn) prevBtn.addEventListener('click', (e) => { e.stopPropagation(); goTo(index - 1); start(); });
+            if (nextBtn) nextBtn.addEventListener('click', (e) => { e.stopPropagation(); goTo(index + 1); start(); });
             container.querySelectorAll('[data-dot-index]').forEach(dot => {
-                dot.addEventListener('click', () => { goTo(Number(dot.dataset.dotIndex)); start(); });
+                dot.addEventListener('click', (e) => { e.stopPropagation(); goTo(Number(dot.dataset.dotIndex)); start(); });
             });
 
             container.addEventListener('mouseenter', stop);
@@ -348,7 +348,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderPromotions() {
         if (!promosGrid) return;
         if (promotions.length === 0) {
-            promosGrid.innerHTML = '<div class="empty-state"><div class="empty-icon">🎈</div><p>Por ahora no hay promociones vigentes.</p></div>';
+            promosGrid.innerHTML = '<div class="promo-empty"><span>🎈</span><span>Por ahora no hay promociones vigentes. ¡Vuelve pronto!</span></div>';
             return;
         }
 
@@ -359,9 +359,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 : '';
             return `
                 <article class="promo-card">
+                    <div class="promo-head">
+                        <span class="promo-icon">🎉</span>
+                        <span class="promo-discount">${escapeHtml(getDiscountText(promo))}</span>
+                    </div>
                     <h3 class="font-display">${escapeHtml(promo.name)}</h3>
-                    <div class="promo-discount">${escapeHtml(getDiscountText(promo))}</div>
-                    <p class="promo-desc">${escapeHtml(promo.description || '')}</p>
+                    ${promo.description ? `<p class="promo-desc">${escapeHtml(promo.description)}</p>` : ''}
                     ${validUntil ? `<span class="promo-validity">📅 ${validUntil}</span>` : ''}
                 </article>
             `;
