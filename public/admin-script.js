@@ -192,12 +192,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Setup event listeners
     function setupEventListeners() {
-        // Login form
-        const loginForm = document.getElementById('loginForm');
-        if (loginForm) {
-            loginForm.addEventListener('submit', handleLogin);
-        }
-
         // Category form
         document.getElementById('categoryForm')?.addEventListener('submit', handleCategorySubmit);
 
@@ -210,6 +204,37 @@ document.addEventListener('DOMContentLoaded', () => {
         // Logout
         document.getElementById('logoutBtn')?.addEventListener('click', handleLogout);
     }
+
+    // Global handleLogin for button click
+    window.handleLogin = async function() {
+        const form = document.getElementById('loginForm');
+        if (!form) return;
+
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+
+        try {
+            const response = await fetch(loginUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showNotification(result.message, 'success');
+                setTimeout(() => {
+                    showDashboard();
+                }, 1000);
+            } else {
+                showNotification(result.message, 'error');
+            }
+        } catch (error) {
+            console.error('Login error:', error);
+            showNotification('Error al iniciar sesión', 'error');
+        }
+    };
 
     // Handle login
     async function handleLogin(e) {
