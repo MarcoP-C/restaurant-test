@@ -1,3 +1,9 @@
 {
-  "version": 2
+  "version": 2,
+  "rewrites": [
+    { "source": "/admin", "destination": "/admin.html" }
+  ],
+  "redirects": [
+    { "source": "/admin.html", "destination": "/admin", "permanent": true }
+  ]
 }
