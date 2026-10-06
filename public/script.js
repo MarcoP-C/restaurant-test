@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentCategory = null; // null = todas
     let carouselTimers = [];
     let currentPage = 1;
-    const PAGE_SIZE = 9;
+    const PAGE_SIZE = 12;
 
     /* ---------------- Referencias ---------------- */
     const siteHeader = document.getElementById('siteHeader');
@@ -389,7 +389,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return `
                 <article class="promo-card">
                     <div class="promo-head">
-                        <span class="promo-icon">🎉</span>
                         <span class="promo-discount">${escapeHtml(getDiscountText(promo))}</span>
                     </div>
                     <h3 class="font-display">${escapeHtml(promo.name)}</h3>

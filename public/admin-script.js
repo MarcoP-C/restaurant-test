@@ -435,7 +435,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderPromotionsTable() {
         if (state.promotions.length === 0) {
-            promotionsTableBody.innerHTML = emptyRow(6, '🎉', 'No hay promociones todavía. Crea una para atraer más clientes.');
+            promotionsTableBody.innerHTML = emptyRow(6, 'No hay promociones todavía. Crea una para atraer más clientes.');
             return;
         }
 
