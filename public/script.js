@@ -6,6 +6,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let promotions = [];
     let currentCategory = null; // null = todas
     let carouselTimers = [];
+    let currentPage = 1;
+    const PAGE_SIZE = 9;
 
     /* ---------------- Referencias ---------------- */
     const siteHeader = document.getElementById('siteHeader');
@@ -16,6 +18,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const productsGrid = document.getElementById('productsGrid');
     const promosGrid = document.getElementById('promosGrid');
     const socialLinks = document.getElementById('socialLinks');
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
+    const loadMoreContainer = document.getElementById('loadMoreContainer');
     const productModal = document.getElementById('productModal');
     const modalClose = document.getElementById('modalClose');
     const modalBody = document.getElementById('modalBody');
@@ -149,6 +153,7 @@ document.addEventListener('DOMContentLoaded', () => {
         all.textContent = '🍽️ Todos';
         all.addEventListener('click', () => {
             currentCategory = null;
+            currentPage = 1;
             renderChips();
             renderProducts();
         });
@@ -160,6 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
             chip.textContent = category.name;
             chip.addEventListener('click', () => {
                 currentCategory = category.id;
+                currentPage = 1;
                 renderChips();
                 renderProducts();
             });
@@ -279,10 +285,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (filtered.length === 0) {
             productsGrid.innerHTML = '<div class="empty-state"><div class="empty-icon">🛎️</div><p>No hay productos en esta categoría todavía.</p></div>';
+            if (loadMoreBtn) loadMoreBtn.style.display = 'none';
             return;
         }
 
-        productsGrid.innerHTML = filtered.map(product => {
+        const pageProducts = filtered.slice(0, currentPage * PAGE_SIZE);
+        const hasMore = pageProducts.length < filtered.length;
+
+        productsGrid.innerHTML = pageProducts.map(product => {
             const pricing = getPromoPricing(product);
             const images = (product.images || []).slice(0, 10);
             return `
@@ -304,12 +314,18 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
         }).join('');
 
-        // Animación de entrada
+        if (loadMoreBtn) {
+            loadMoreBtn.style.display = hasMore ? 'inline-flex' : 'none';
+            const remaining = filtered.length - pageProducts.length;
+            loadMoreBtn.innerHTML = hasMore
+                ? `Ver más platillos ↓ <span style="opacity:0.75;font-size:0.82em">(${remaining} restantes)</span>`
+                : '✓ Todos los platillos cargados';
+        }
+
         requestAnimationFrame(() => {
             productsGrid.querySelectorAll('.fade-in').forEach(card => card.classList.add('visible'));
         });
 
-        // Carruseles + clic a detalle
         initCarousels();
         productsGrid.querySelectorAll('.product-card').forEach(card => {
             const open = () => showProductModal(Number(card.dataset.productId));
@@ -321,6 +337,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         });
+    }
+
+    function loadMore() {
+        currentPage++;
+        renderProducts();
+        const grid = document.getElementById('productsGrid');
+        if (grid) {
+            grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+
+    if (loadMoreBtn) {
+        loadMoreBtn.addEventListener('click', loadMore);
     }
 
     /* ---------------- Render de promociones ---------------- */

@@ -159,6 +159,17 @@ button {
     color: var(--accent);
 }
 
+.btn-outline {
+    background: transparent;
+    color: var(--accent);
+    border: 1.5px solid var(--accent);
+}
+
+.btn-outline:hover:not(:disabled) {
+    background: var(--accent);
+    color: var(--on-accent);
+}
+
 .btn-ghost {
     background: transparent;
     color: var(--text-2);
@@ -2076,6 +2087,20 @@ button {
     .footer-inner {
         grid-template-columns: 1fr;
         gap: 1.8rem;
+    }
+
+    #loadMoreContainer {
+        margin-top: 1.4rem;
+    }
+
+    #loadMoreBtn {
+        width: 100%;
+        font-size: 0.9rem;
+        padding: 0.75rem 1.2rem;
+    }
+
+    #loadMoreBtn span {
+        display: none;
     }
 }
 
