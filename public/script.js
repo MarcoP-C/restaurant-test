@@ -295,8 +295,9 @@ document.addEventListener('DOMContentLoaded', () => {
         productsGrid.innerHTML = pageProducts.map(product => {
             const pricing = getPromoPricing(product);
             const images = (product.images || []).slice(0, 10);
+            const hasImage = images.length > 0;
             return `
-                <article class="product-card fade-in ${pricing.promoActive ? 'is-promotional' : ''}" data-product-id="${product.id}" tabindex="0" role="button" aria-label="Ver ${escapeHtml(product.name)}">
+                <article class="product-card fade-in ${pricing.promoActive ? 'is-promotional' : ''}" ${!hasImage ? 'style="--has-image:0"' : ''} data-product-id="${product.id}" tabindex="0" role="button" aria-label="Ver ${escapeHtml(product.name)}">
                     ${carouselHtml(product, images, true, pricing.promoActive)}
                     <div class="product-body">
                         <span class="product-category">${escapeHtml(product.category_name || 'Sin categoría')}</span>

@@ -2207,6 +2207,23 @@ button {
     .brand-name {
         font-size: 1.05rem;
     }
+
+    /* Producto sin imagen: sin recuadro de imagen en lista móvil */
+    .product-card[style*="--has-image:0"] > .carousel {
+        display: none;
+    }
+
+    .product-card[style*="--has-image:0"] > .product-body {
+        width: 100%;
+    }
+
+    .product-card[style*="--has-image:0"] > .product-body .product-desc {
+        margin-bottom: 0.35rem;
+    }
+
+    .product-card[style*="--has-image:0"] > .product-body .product-price-row {
+        margin-top: 0.4rem;
+    }
 }
 
 @media (max-width: 768px) {
