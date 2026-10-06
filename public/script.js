@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (themeToggle) themeToggle.innerHTML = theme === 'dark' ? SUN_ICON : MOON_ICON;
     }
 
-    applyTheme(localStorage.getItem('theme') || 'light');
+    applyTheme(localStorage.getItem('theme') || 'dark');
 
     if (themeToggle) {
         themeToggle.addEventListener('click', () => {
